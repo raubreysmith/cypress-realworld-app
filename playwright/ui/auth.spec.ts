@@ -94,18 +94,38 @@ test.describe.only("User Sign-up and Login", function () {
     // cy.visualSnapshot("Redirect to SignIn");
   });
 
-  test.fixme("should display login errors", async ({ page }) => {
+  test("should display login errors", async ({ page }) => {
     // cy.visit("/");
+    await page.goto("/");
+
     // cy.getBySel("signin-username").type("User").find("input").clear().blur();
+    await page.getByLabel("Username").fill("User");
+    await page.getByLabel("Username").clear();
+    await page.getByLabel("Username").blur();
+
     // cy.get("#username-helper-text").should("be.visible").and("contain", "Username is required");
+    await expect(page.getByText("Username is required")).toBeVisible();
+
     // cy.visualSnapshot("Display Username is Required Error");
+    await expect(page).toHaveScreenshot("Display Username is Required Error.png");
+
     // cy.getBySel("signin-password").type("abc").find("input").blur();
+    await page.getByLabel("Password").fill("abc");
+    await page.getByLabel("Password").blur();
+
     // cy.get("#password-helper-text")
     //   .should("be.visible")
     //   .and("contain", "Password must contain at least 4 characters");
+    await expect(page.getByText("Password must contain at least 4 characters")).toBeVisible();
+
     // cy.visualSnapshot("Display Password Error");
+    await expect(page).toHaveScreenshot("Display Password Error.png");
+
     // cy.getBySel("signin-submit").should("be.disabled");
+    await expect(page.getByRole("button", { name: "Sign In" })).toBeDisabled();
+
     // cy.visualSnapshot("Sign In Submit Disabled");
+    await expect(page).toHaveScreenshot("Sign In Submit Disabled.png");
   });
 
   test.fixme("should display signup errors", async ({ page }) => {
