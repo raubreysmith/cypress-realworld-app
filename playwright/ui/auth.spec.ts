@@ -1,12 +1,19 @@
 // import { User } from "../../../src/models";
 // import { isMobile } from "../../support/utils";
-import { test, expect } from "@playwright/test";
+import { test, expect, selectors } from "@playwright/test";
+import child_process from "node:child_process";
+import util from "util";
+const exec = util.promisify(child_process.exec);
 
 // const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
 
 test.describe.only("User Sign-up and Login", function () {
-  test.beforeEach(function () {
+  test.beforeEach(async () => {
     // cy.task("db:seed");
+    const { stdout, stderr } = await exec("yarn db:seed:dev");
+    console.log("stdout:", stdout);
+    console.error("stderr:", stderr);
+
     // cy.intercept("POST", "/users").as("signup");
     // cy.intercept("POST", apiGraphQL, (req) => {
     //   const { body } = req;
@@ -44,44 +51,166 @@ test.describe.only("User Sign-up and Login", function () {
     // cy.visualSnapshot("Redirect to SignIn");
   });
 
-  test.fixme("should allow a visitor to sign-up, login, and logout", async ({ page }) => {
-    // const userInfo = {
-    //   firstName: "Bob",
-    //   lastName: "Ross",
-    //   username: "PainterJoy90",
-    //   password: "s3cret",
-    // };
-    // // Sign-up User
+  test.only("should allow a visitor to sign-up, login, and logout", async ({ page }) => {
+    const userInfo = {
+      firstName: "Bob",
+      lastName: "Ross",
+      username: "PainterJoy91",
+      password: "s3cret",
+    };
+
+    // Sign-up User
+
     // cy.visit("/");
+    await page.goto("/");
+
+    // blur uname field else sign up click doesnt work first time (App Bug!)
+    await page.getByLabel("Username").blur();
+
     // cy.getBySel("signup").click();
+    await page.getByRole("link", { name: "Sign Up" }).click();
+
     // cy.getBySel("signup-title").should("be.visible").and("contain", "Sign Up");
+    await expect(page.getByRole("heading", { name: "Sign Up" })).toBeVisible();
+
     // cy.visualSnapshot("Sign Up Title");
+    await expect(page).toHaveScreenshot("Sign Up Title.png");
+
     // cy.getBySel("signup-first-name").type(userInfo.firstName);
+    await page.getByLabel("First Name").fill(userInfo.firstName);
+
     // cy.getBySel("signup-last-name").type(userInfo.lastName);
+    await page.getByLabel("Last Name").fill(userInfo.lastName);
+
     // cy.getBySel("signup-username").type(userInfo.username);
+    await page.getByLabel("Username").fill(userInfo.username);
+
     // cy.getBySel("signup-password").type(userInfo.password);
+    await page.getByLabel(/^Password/).fill(userInfo.password);
+
     // cy.getBySel("signup-confirmPassword").type(userInfo.password);
+    await page.getByLabel("Confirm Password").fill(userInfo.password);
+    await page.getByLabel("Confirm Password").blur();
+
     // cy.visualSnapshot("About to Sign Up");
+    await expect(page).toHaveScreenshot("About to Sign Up.png");
+
+    // @signup -> intercept network request
+    await page.route("/users", (route) => route.continue());
+
     // cy.getBySel("signup-submit").click();
+    await page.getByRole("button", { name: "Sign Up" }).click();
+
     // cy.wait("@signup");
+    // -> cy.intercept("POST", "/users").as("signup");
+
     // // Login User
     // cy.login(userInfo.username, userInfo.password);
-    // // Onboarding
+    // ->
+
+    const signinPath = "/signin";
+    // const log = Cypress.log({
+    //   name: "login",
+    //   displayName: "LOGIN",
+    //   message: [`🔐 Authenticating | ${username}`],
+    //   // @ts-ignore
+    //   autoEnd: false,
+    // });
+
+    // cy.intercept("POST", "/login").as("loginUser");
+    await page.route("/login", (route) => route.continue());
+
+    // cy.intercept("GET", "checkAuth").as("getUserProfile");
+    await page.route("/checkAuth", (route) => route.continue());
+
+    // cy.location("pathname", { log: false }).then((currentPath) => {
+    //   if (currentPath !== signinPath) {
+    //     cy.visit(signinPath);
+    //   }
+    // });
+
+    const currentPath = page.url();
+    if (currentPath !== signinPath) {
+      await page.goto(signinPath);
+    }
+
+    // log.snapshot("before");
+
+    // cy.getBySel("signin-username").type(username);
+    await page.getByLabel("Username").fill(userInfo.username);
+
+    // cy.getBySel("signin-password").type(password);
+    await page.getByLabel("Password").fill(userInfo.password);
+
+    // if (rememberUser) {
+    //   cy.getBySel("signin-remember-me").find("input").check();
+    // }
+
+    // cy.getBySel("signin-submit").click();
+    await page.getByRole("button", { name: "Sign In" }).click();
+
+    // cy.wait("@loginUser").then((loginUser: any) => {
+    //   log.set({
+    //     consoleProps() {
+    //       return {
+    //         username,
+    //         password,
+    //         rememberUser,
+    //         userId: loginUser.response.statusCode !== 401 && loginUser.response.body.user.id,
+    //       };
+    //     },
+    //   });
+
+    //   log.snapshot("after");
+    //   log.end();
+    // });
+
+    // Onboarding
+
     // cy.getBySel("user-onboarding-dialog").should("be.visible");
+    await expect(page.getByRole("dialog", { name: "Get Started" })).toBeVisible();
+
     // cy.getBySel("list-skeleton").should("not.exist");
+    selectors.setTestIdAttribute("data-test"); // playwright defaults to data-testid
+    await expect(page.getByTestId("list-skeleton")).not.toBeVisible();
+
     // cy.getBySel("nav-top-notifications-count").should("exist");
+    await expect(page.getByTestId("nav-top-notifications-count")).toBeVisible();
+
     // cy.visualSnapshot("User Onboarding Dialog");
+    await expect(page).toHaveScreenshot("User Onboarding Dialog.png");
+
     // cy.getBySel("user-onboarding-next").click();
+    await page.getByRole("button", { name: "Next" }).click();
+
     // cy.getBySel("user-onboarding-dialog-title").should("contain", "Create Bank Account");
+    await expect(page.getByRole("heading", { name: "Create Bank Account" })).toBeVisible();
+
     // cy.getBySelLike("bankName-input").type("The Best Bank");
+    await page.getByPlaceholder("Bank Name").fill("The Best Bank");
+
     // cy.getBySelLike("accountNumber-input").type("123456789");
+    await page.getByPlaceholder("Routing Number").fill("123456789");
+
     // cy.getBySelLike("routingNumber-input").type("987654321");
+    await page.getByPlaceholder("Account Number").fill("987654321");
+
     // cy.visualSnapshot("About to complete User Onboarding");
+    await expect(page).toHaveScreenshot("About to complete User Onboarding.png");
+
     // cy.getBySelLike("submit").click();
+    await page.getByRole("button", { name: "Save" }).click();
+
     // cy.wait("@gqlCreateBankAccountMutation");
     // cy.getBySel("user-onboarding-dialog-title").should("contain", "Finished");
+    await expect(page.getByRole("heading", { name: "Finished" })).toBeVisible();
+
     // cy.getBySel("user-onboarding-dialog-content").should("contain", "You're all set!");
+    await expect(page.getByText("You're all set!")).toBeVisible();
+
     // cy.visualSnapshot("Finished User Onboarding");
+    await expect(page).toHaveScreenshot("Finished User Onboarding.png");
+
     // cy.getBySel("user-onboarding-next").click();
     // cy.getBySel("transaction-list").should("be.visible");
     // cy.visualSnapshot("Transaction List is visible after User Onboarding");
