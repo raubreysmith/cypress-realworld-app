@@ -140,7 +140,19 @@ test.describe.only("User Sign-up and Login", function () {
     // });
 
     // cy.intercept("POST", "/login").as("loginUser");
-    await page.route("/login", (route) => route.continue());
+    await page.route("**/login", async (route) => {
+      const response = await route.fetch();
+      const body = JSON.parse(await response.text());
+
+      console.log({
+        username: userInfo.username,
+        password: userInfo.password,
+        rememberUser: false,
+        userId: body.user.id,
+      });
+
+      await route.fulfill({ response });
+    });
 
     // cy.intercept("GET", "checkAuth").as("getUserProfile");
     await page.route("/checkAuth", (route) => route.continue());
