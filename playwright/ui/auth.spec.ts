@@ -19,6 +19,10 @@ function getIdSeed(workerIndex: number): string {
   return `-${workerIndex}-${Date.now()}`;
 }
 
+function isMobile(): boolean {
+  return false;
+}
+
 test.describe.only("User Sign-up and Login", function () {
   test.beforeAll(async () => {
     // cy.task("db:seed");
@@ -107,7 +111,11 @@ test.describe.only("User Sign-up and Login", function () {
     await page.getByLabel("Confirm Password").blur();
 
     // cy.visualSnapshot("About to Sign Up");
-    await expect(page).toHaveScreenshot("About to Sign Up.png", { maxDiffPixels: 200 });
+    await expect(page).toHaveScreenshot("About to Sign Up.png", {
+      maxDiffPixels: 20,
+      mask: [page.getByLabel("Username")],
+      maskColor: "#800080",
+    });
 
     // @signup -> intercept network request
     await page.route("/users", (route) => route.continue());
@@ -192,7 +200,11 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page.getByTestId("nav-top-notifications-count")).toBeVisible();
 
     // cy.visualSnapshot("User Onboarding Dialog");
-    await expect(page).toHaveScreenshot("User Onboarding Dialog.png", { maxDiffPixels: 200 });
+    await expect(page).toHaveScreenshot("User Onboarding Dialog.png", {
+      maxDiffPixels: 20,
+      mask: [page.getByTestId("sidenav-username")],
+      maskColor: "#800080",
+    });
 
     // cy.getBySel("user-onboarding-next").click();
     await page.getByRole("button", { name: "Next" }).click();
@@ -211,7 +223,9 @@ test.describe.only("User Sign-up and Login", function () {
 
     // cy.visualSnapshot("About to complete User Onboarding");
     await expect(page).toHaveScreenshot("About to complete User Onboarding.png", {
-      maxDiffPixels: 200,
+      maxDiffPixels: 20,
+      mask: [page.getByTestId("sidenav-username")],
+      maskColor: "#800080",
     });
 
     // cy.getBySelLike("submit").click();
@@ -225,18 +239,38 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page.getByText("You're all set!")).toBeVisible();
 
     // cy.visualSnapshot("Finished User Onboarding");
-    await expect(page).toHaveScreenshot("Finished User Onboarding.png", { maxDiffPixels: 200 });
+    await expect(page).toHaveScreenshot("Finished User Onboarding.png", {
+      maxDiffPixels: 20,
+      mask: [page.getByTestId("sidenav-username")],
+      maskColor: "#800080",
+    });
 
     // cy.getBySel("user-onboarding-next").click();
+    await page.getByRole("button", { name: "Done" }).click();
+
     // cy.getBySel("transaction-list").should("be.visible");
+    await expect(page.getByTestId("transaction-list")).toBeVisible();
+
     // cy.visualSnapshot("Transaction List is visible after User Onboarding");
-    // // Logout User
-    // if (isMobile()) {
-    //   cy.getBySel("sidenav-toggle").click();
-    // }
+    await expect(page).toHaveScreenshot("Transaction List is visible after User Onboarding.png", {
+      maxDiffPixels: 20,
+      mask: [page.getByTestId("sidenav-username")],
+      maskColor: "#800080",
+    });
+
+    // Logout User
+    if (isMobile()) {
+      //cy.getBySel("sidenav-toggle").click();
+    }
+
     // cy.getBySel("sidenav-signout").click();
+    await page.getByRole("button", { name: "Logout" }).click();
+
     // cy.location("pathname").should("eq", "/signin");
+    await expect(page).toHaveURL(/.*\/signin/);
+
     // cy.visualSnapshot("Redirect to SignIn");
+    await expect(page).toHaveScreenshot("Redirect to SignIn.png");
   });
 
   test("should display login errors", async ({ page }) => {
