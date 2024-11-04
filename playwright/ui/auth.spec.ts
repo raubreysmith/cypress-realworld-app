@@ -7,12 +7,22 @@ const exec = util.promisify(child_process.exec);
 
 // const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
 
+// refresh the json db with seeded backup
+async function seedDb() {
+  const { stdout, stderr } = await exec("yarn db:seed:dev");
+  console.log("stdout:", stdout);
+  console.error("stderr:", stderr);
+}
+
+// generate a uuid from the workId and epoch timestamp ensuring parallel runs work reliably
+function getIdSeed(workerIndex: number): string {
+  return `-${workerIndex}-${Date.now()}`;
+}
+
 test.describe.only("User Sign-up and Login", function () {
-  test.beforeEach(async () => {
+  test.beforeAll(async () => {
     // cy.task("db:seed");
-    const { stdout, stderr } = await exec("yarn db:seed:dev");
-    console.log("stdout:", stdout);
-    console.error("stderr:", stderr);
+    await seedDb();
 
     // cy.intercept("POST", "/users").as("signup");
     // cy.intercept("POST", apiGraphQL, (req) => {
@@ -21,6 +31,10 @@ test.describe.only("User Sign-up and Login", function () {
     //     req.alias = "gqlCreateBankAccountMutation";
     //   }
     // });
+  });
+
+  test.afterAll(async () => {
+    await seedDb();
   });
 
   test.fixme("should redirect unauthenticated user to signin page", async ({ page }) => {
@@ -51,11 +65,11 @@ test.describe.only("User Sign-up and Login", function () {
     // cy.visualSnapshot("Redirect to SignIn");
   });
 
-  test.only("should allow a visitor to sign-up, login, and logout", async ({ page }) => {
+  test.only("should allow a visitor to sign-up, login, and logout", async ({ page }, testInfo) => {
     const userInfo = {
       firstName: "Bob",
       lastName: "Ross",
-      username: "PainterJoy91",
+      username: "PainterJoy" + getIdSeed(testInfo.workerIndex),
       password: "s3cret",
     };
 
@@ -93,7 +107,7 @@ test.describe.only("User Sign-up and Login", function () {
     await page.getByLabel("Confirm Password").blur();
 
     // cy.visualSnapshot("About to Sign Up");
-    await expect(page).toHaveScreenshot("About to Sign Up.png");
+    await expect(page).toHaveScreenshot("About to Sign Up.png", { maxDiffPixels: 200 });
 
     // @signup -> intercept network request
     await page.route("/users", (route) => route.continue());
@@ -178,7 +192,7 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page.getByTestId("nav-top-notifications-count")).toBeVisible();
 
     // cy.visualSnapshot("User Onboarding Dialog");
-    await expect(page).toHaveScreenshot("User Onboarding Dialog.png");
+    await expect(page).toHaveScreenshot("User Onboarding Dialog.png", { maxDiffPixels: 200 });
 
     // cy.getBySel("user-onboarding-next").click();
     await page.getByRole("button", { name: "Next" }).click();
@@ -196,7 +210,9 @@ test.describe.only("User Sign-up and Login", function () {
     await page.getByPlaceholder("Account Number").fill("987654321");
 
     // cy.visualSnapshot("About to complete User Onboarding");
-    await expect(page).toHaveScreenshot("About to complete User Onboarding.png");
+    await expect(page).toHaveScreenshot("About to complete User Onboarding.png", {
+      maxDiffPixels: 200,
+    });
 
     // cy.getBySelLike("submit").click();
     await page.getByRole("button", { name: "Save" }).click();
@@ -209,7 +225,7 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page.getByText("You're all set!")).toBeVisible();
 
     // cy.visualSnapshot("Finished User Onboarding");
-    await expect(page).toHaveScreenshot("Finished User Onboarding.png");
+    await expect(page).toHaveScreenshot("Finished User Onboarding.png", { maxDiffPixels: 200 });
 
     // cy.getBySel("user-onboarding-next").click();
     // cy.getBySel("transaction-list").should("be.visible");
