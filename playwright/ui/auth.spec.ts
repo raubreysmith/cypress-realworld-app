@@ -140,6 +140,7 @@ test.describe.only("User Sign-up and Login", function () {
     // });
 
     // cy.intercept("POST", "/login").as("loginUser");
+    // possible to intercept/mock the response, but does not return anything to work with later. See waitForResponse as alternative
     await page.route("**/login", async (route) => {
       const response = await route.fetch();
       const body = JSON.parse(await response.text());
@@ -180,6 +181,9 @@ test.describe.only("User Sign-up and Login", function () {
     //   cy.getBySel("signin-remember-me").find("input").check();
     // }
 
+    // alternative to route, sets uo a response to wait for and has a return object so we can use the data elsewhere
+    const loginResponse = page.waitForResponse("**/login");
+
     // cy.getBySel("signin-submit").click();
     await page.getByRole("button", { name: "Sign In" }).click();
 
@@ -198,6 +202,19 @@ test.describe.only("User Sign-up and Login", function () {
     //   log.snapshot("after");
     //   log.end();
     // });
+
+    // Start waiting for response before clicking. Note no await.
+
+    // now we can consume the data of the response we waited on
+    const response = await loginResponse;
+    const body = JSON.parse(await response.text());
+
+    console.log({
+      username: userInfo.username,
+      password: userInfo.password,
+      rememberUser: false,
+      userId: body.user.id,
+    });
 
     // Onboarding
 
