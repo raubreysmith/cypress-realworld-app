@@ -1,6 +1,7 @@
 // import { User } from "../../../src/models";
 // import { isMobile } from "../../support/utils";
-import { test, expect, selectors } from "@playwright/test";
+import { expect, selectors } from "@playwright/test";
+import { test } from "../fixtures/base.fixture";
 import child_process from "node:child_process";
 import util from "util";
 const exec = util.promisify(child_process.exec);
@@ -69,7 +70,10 @@ test.describe.only("User Sign-up and Login", function () {
     // cy.visualSnapshot("Redirect to SignIn");
   });
 
-  test.only("should allow a visitor to sign-up, login, and logout", async ({ page }, testInfo) => {
+  test.only("should allow a visitor to sign-up, login, and logout", async ({
+    page,
+    authStep,
+  }, testInfo) => {
     const userInfo = {
       firstName: "Bob",
       lastName: "Ross",
@@ -169,52 +173,8 @@ test.describe.only("User Sign-up and Login", function () {
       await page.goto(signinPath);
     }
 
-    // log.snapshot("before");
-
-    // cy.getBySel("signin-username").type(username);
-    await page.getByLabel("Username").fill(userInfo.username);
-
-    // cy.getBySel("signin-password").type(password);
-    await page.getByLabel("Password").fill(userInfo.password);
-
-    // if (rememberUser) {
-    //   cy.getBySel("signin-remember-me").find("input").check();
-    // }
-
-    // alternative to route, sets uo a response to wait for and has a return object so we can use the data elsewhere
-    const loginResponse = page.waitForResponse("**/login");
-
-    // cy.getBySel("signin-submit").click();
-    await page.getByRole("button", { name: "Sign In" }).click();
-
-    // cy.wait("@loginUser").then((loginUser: any) => {
-    //   log.set({
-    //     consoleProps() {
-    //       return {
-    //         username,
-    //         password,
-    //         rememberUser,
-    //         userId: loginUser.response.statusCode !== 401 && loginUser.response.body.user.id,
-    //       };
-    //     },
-    //   });
-
-    //   log.snapshot("after");
-    //   log.end();
-    // });
-
-    // Start waiting for response before clicking. Note no await.
-
-    // now we can consume the data of the response we waited on
-    const response = await loginResponse;
-    const body = JSON.parse(await response.text());
-
-    console.log({
-      username: userInfo.username,
-      password: userInfo.password,
-      rememberUser: false,
-      userId: body.user.id,
-    });
+    // cy.login(userInfo.username, userInfo.password)
+    await authStep.login(userInfo.username, userInfo.password);
 
     // Onboarding
 
