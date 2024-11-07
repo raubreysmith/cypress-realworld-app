@@ -4,16 +4,9 @@ import { expect, selectors } from "@playwright/test";
 import { test } from "../fixtures/base.fixture";
 import child_process from "node:child_process";
 import util from "util";
-const exec = util.promisify(child_process.exec);
+import { findData, seedDatabase } from "../services/testdata/testdata.service";
 
 // const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
-
-// refresh the json db with seeded backup
-async function seedDb() {
-  const { stdout, stderr } = await exec("yarn db:seed:dev");
-  console.log("stdout:", stdout);
-  console.error("stderr:", stderr);
-}
 
 // generate a uuid from the workId and epoch timestamp ensuring parallel runs work reliably
 function getIdSeed(workerIndex: number): string {
@@ -26,8 +19,7 @@ function isMobile(): boolean {
 
 test.describe.only("User Sign-up and Login", function () {
   test.beforeAll(async () => {
-    // cy.task("db:seed");
-    await seedDb();
+    await seedDatabase();
 
     // cy.intercept("POST", "/users").as("signup");
     // cy.intercept("POST", apiGraphQL, (req) => {
@@ -39,38 +31,70 @@ test.describe.only("User Sign-up and Login", function () {
   });
 
   test.afterAll(async () => {
-    await seedDb();
+    // reset the db after all tests
+    await seedDatabase();
   });
 
-  test.fixme("should redirect unauthenticated user to signin page", async ({ page }) => {
+  test("should redirect unauthenticated user to signin page", async ({ page }) => {
     // cy.visit("/personal");
+    await page.goto("/personal");
+
     // cy.location("pathname").should("equal", "/signin");
+    await expect(page).toHaveURL("/signin");
+
     // cy.visualSnapshot("Redirect to SignIn");
+    await expect(page).toHaveScreenshot("Redirect to SignIn.png");
   });
 
-  test.fixme("should redirect to the home page after login", async ({ page }) => {
+  test("should redirect to the home page after login", async ({ page, authStep }) => {
     // cy.database("find", "users").then((user: User) => {
     //   cy.login(user.username, "s3cret", { rememberUser: true });
     // });
+    const user = await findData({ entity: "users" });
+    console.log("user", user);
+
+    await page.goto("/");
+    await authStep.login(user.username, "s3cret");
+
     // cy.location("pathname").should("equal", "/");
+    await expect(page).toHaveURL("/");
   });
 
-  test.fixme("should remember a user for 30 days after login", async ({ page }) => {
+  test.only("should remember a user for 30 days after login", async ({ page, authStep }) => {
     // cy.database("find", "users").then((user: User) => {
     //   cy.login(user.username, "s3cret", { rememberUser: true });
     // });
+    const user = await findData({ entity: "users" });
+    console.log("user", user);
+
+    await page.goto("/");
+    await authStep.login(user.username, "s3cret", true);
+
     // // Verify Session Cookie
     // cy.getCookie("connect.sid").should("have.property", "expiry");
+    const cookies = await page.context().cookies();
+    const sessionCookie = cookies.find((cookie) => cookie.name === "connect.sid");
+    expect(sessionCookie).toBeDefined();
+    console.log("sessionCookie", sessionCookie);
+    expect(sessionCookie?.expires).toBeGreaterThan(0);
+
     // // Logout User
+
     // if (isMobile()) {
     //   cy.getBySel("sidenav-toggle").click();
     // }
+
     // cy.getBySel("sidenav-signout").click();
+    await page.getByRole("button", { name: "Logout" }).click();
+
     // cy.location("pathname").should("eq", "/signin");
+    await expect(page).toHaveURL("/signin");
+
     // cy.visualSnapshot("Redirect to SignIn");
+    await expect(page).toHaveScreenshot("Redirect to SignIn.png");
   });
 
-  test.only("should allow a visitor to sign-up, login, and logout", async ({
+  test("should allow a visitor to sign-up, login, and logout", async ({
     page,
     authStep,
   }, testInfo) => {
@@ -167,7 +191,6 @@ test.describe.only("User Sign-up and Login", function () {
     //     cy.visit(signinPath);
     //   }
     // });
-
     const currentPath = page.url();
     if (currentPath !== signinPath) {
       await page.goto(signinPath);
