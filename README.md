@@ -1,3 +1,4 @@
+<p align="center">Ross Aubrey-Smith's copy of...</p>
 <p align="center">
   <!-- We use two SVGs here so that this displays correctly
     on Github. This might not look right in other Markdown previewers. -->
@@ -12,25 +13,7 @@
 </p>
 
 <p align="center">
-   <a href="https://cloud.cypress.io/projects/7s5okt/runs">
-    <img src="https://img.shields.io/endpoint?url=https://cloud.cypress.io/badge/detailed/7s5okt/develop&style=flat&logo=cypress" />
-  </a>
-
-  <a href="https://codecov.io/gh/cypress-io/cypress-realworld-app">
-    <img src="https://codecov.io/gh/cypress-io/cypress-realworld-app/branch/develop/graph/badge.svg" />
-  </a>
-
-  <a href="https://percy.io/cypress-io/cypress-realworld-app">
-    <img src="https://percy.io/static/images/percy-badge.svg" />
-  </a>
-
-   <a href="#contributors-">
-    <img src="https://img.shields.io/badge/all_contributors-6-green.svg?style=flat" />
-  </a>
-</p>
-
-<p align="center">
-A payment application to demonstrate <strong>real-world</strong> usage of <a href="https://cypress.io">Cypress</a> testing methods, patterns, and workflows.
+A copy of the Cypress payment application to demonstrate <strong>real-world</strong> usage of <a href="https://cypress.io">Cypress</a> and <a href="https://playwright.dev/"><strong>Playwright*</strong></a> testing methods, patterns, and workflows.
 </p>
 
 <p align="center">
@@ -40,6 +23,8 @@ A payment application to demonstrate <strong>real-world</strong> usage of <a hre
 > 💬 **Note from maintainers**
 >
 > This application is purely for demonstration and educational purposes. Its setup and configuration resemble typical real-world applications, but it's not a full-fledged production system. Use this app to learn, experiment, tinker, and practice application testing with Cypress.
+>
+> \*Playwright examples have been added by copying the existing tests with the Cypress commands left in as comments for comparison.
 >
 > Happy Testing!
 
@@ -138,20 +123,29 @@ yarn cypress:open
 >
 > Avoid committing the modified `cypress.config.ts` into Git since the CI environments still expect the application to be run on default ports.
 
+### Start Playwright
+
+```shell
+yarn playwright test --ui
+```
+
+> 🚩 **Note**
+>
+> If you have changed the default ports, then you need to update Cypress configuration file (`playwright.config.ts`) locally.
+> There are two properties that you need to update in `playwright.config.ts`: `use.baseURL`, `webServer.url`.
+
 ## Tests
 
-| Type      | Location                                 |
-| --------- | ---------------------------------------- |
-| api       | [cypress/tests/api](./cypress/tests/api) |
-| ui        | [cypress/tests/ui](./cypress/tests/ui)   |
-| component | [src/(next to component)](./src)         |
-| unit      | [`src/__tests__`](./src/__tests__)       |
+| Type | Location                                       |
+| ---- | ---------------------------------------------- |
+| api  | [playwright/tests/api](./playwright/tests/api) |
+| ui   | [playwright/tests/ui](./playwright/tests/ui)   |
 
 ## Database
 
 - The local JSON database is located in [data/database.json](./data/database.json) and is managed with [lowdb].
 
-- The database is [reseeded](./data/database-seed.json) each time the application is started (via `yarn dev`). Database seeding is done in between each [Cypress End-to-End test](./cypress/tests).
+- The database is [reseeded](./data/database-seed.json) each time the application is started (via `yarn dev`). Database seeding is done in between each [Playwright End-to-End test](./playwright/tests).
 
 - Updates via the React frontend are sent to the [Express][express] server and handled by a set of [database utilities](backend/database.ts)
 
