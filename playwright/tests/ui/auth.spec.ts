@@ -1,8 +1,8 @@
 // import { User } from "../../../src/models";
 // import { isMobile } from "../../support/utils";
 import { expect, selectors } from "@playwright/test";
-import { test } from "../fixtures/base.fixture";
-import { findData, seedDatabase } from "../services/testdata/testdata.service";
+import { test } from "../../fixtures/base.fixture";
+import { findData, seedDatabase } from "../../services/testdata/testdata.service";
 
 // const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
 
