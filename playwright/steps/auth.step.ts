@@ -24,12 +24,14 @@ export class AuthStep {
 
     // now we can consume the data of the response we waited on
     const response = await loginResponse;
-    const body = JSON.parse(await response.text());
-    console.log({
-      username: username,
-      password: password,
-      rememberUser: false,
-      userId: body.user.id,
-    });
+    if (response.status() === 201) {
+      const body = JSON.parse(await response.text());
+      console.log({
+        username: username,
+        password: password,
+        rememberUser: false,
+        userId: body.user.id,
+      });
+    }
   }
 }

@@ -15,7 +15,7 @@ function isMobile(): boolean {
   return false;
 }
 
-test.describe.only("User Sign-up and Login", function () {
+test.describe("User Sign-up and Login", function () {
   test.beforeAll(async () => {
     await seedDatabase();
 
@@ -58,7 +58,7 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page).toHaveURL("/");
   });
 
-  test.only("should remember a user for 30 days after login", async ({ page, authStep }) => {
+  test("should remember a user for 30 days after login", async ({ page, authStep }) => {
     // cy.database("find", "users").then((user: User) => {
     //   cy.login(user.username, "s3cret", { rememberUser: true });
     // });
@@ -317,41 +317,92 @@ test.describe.only("User Sign-up and Login", function () {
     await expect(page).toHaveScreenshot("Sign In Submit Disabled.png");
   });
 
-  test.fixme("should display signup errors", async ({ page }) => {
+  test("should display signup errors", async ({ page }) => {
     // cy.intercept("GET", "/signup");
     // cy.visit("/signup");
+    await page.goto("/signup");
+
     // cy.getBySel("signup-first-name").type("First").find("input").clear().blur();
+    await page.getByLabel("First Name").fill("First");
+    await page.getByLabel("First Name").clear();
+    await page.getByLabel("First Name").blur();
     // cy.get("#firstName-helper-text").should("be.visible").and("contain", "First Name is required");
+    await expect(page.getByText("First Name is required")).toBeVisible();
+
+    // cy.visualSnapshot("Display Sign Up First Name Required Error");
+    await expect(page).toHaveScreenshot("Display Sign Up First Name Required Error.png");
+
     // cy.getBySel("signup-last-name").type("Last").find("input").clear().blur();
+    await page.getByLabel("Last Name").fill("Last");
+    await page.getByLabel("Last Name").clear();
+    await page.getByLabel("Last Name").blur();
     // cy.get("#lastName-helper-text").should("be.visible").and("contain", "Last Name is required");
+    await expect(page.getByText("Last Name is required")).toBeVisible();
+
     // cy.getBySel("signup-username").type("User").find("input").clear().blur();
+    await page.getByLabel("Username").fill("User");
+    await page.getByLabel("Username").clear();
+    await page.getByLabel("Username").blur();
     // cy.get("#username-helper-text").should("be.visible").and("contain", "Username is required");
+    await expect(page.getByText("Username is required")).toBeVisible();
+
     // cy.getBySel("signup-password").type("password").find("input").clear().blur();
+    await page.getByLabel(/^Password/).fill("password");
+    await page.getByLabel(/^Password/).clear();
+    await page.getByLabel(/^Password/).blur();
     // cy.get("#password-helper-text").should("be.visible").and("contain", "Enter your password");
+    await expect(page.getByText("Enter your password")).toBeVisible();
+
     // cy.getBySel("signup-confirmPassword").type("DIFFERENT PASSWORD").find("input").blur();
+    await page.getByLabel("Confirm Password").fill("DIFFERENT PASSWORD");
+    await page.getByLabel("Confirm Password").blur();
     // cy.get("#confirmPassword-helper-text")
     //   .should("be.visible")
     //   .and("contain", "Password does not match");
+    await expect(page.getByText("Password does not match")).toBeVisible();
+
     // cy.visualSnapshot("Display Sign Up Required Errors");
+    await expect(page).toHaveScreenshot("Display Sign Up Required Errors.png");
+
     // cy.getBySel("signup-submit").should("be.disabled");
+    await expect(page.getByRole("button", { name: "Sign Up" })).toBeDisabled();
+
     // cy.visualSnapshot("Sign Up Submit Disabled");
+    await expect(page).toHaveScreenshot("Sign Up Submit Disabled.png");
   });
 
-  test.fixme("should error for an invalid user", async ({ page }) => {
+  test("should error for an invalid user", async ({ page, authStep }) => {
     // cy.login("invalidUserName", "invalidPa$$word");
+    page.goto("/");
+    authStep.login("invalidUserName", "invalidPa$$word");
     // cy.getBySel("signin-error")
     //   .should("be.visible")
     //   .and("have.text", "Username or password is invalid");
+    await expect(page.getByText("Username or password is invalid")).toBeVisible();
     // cy.visualSnapshot("Sign In, Invalid Username and Password, Username or Password is Invalid");
+    await expect(page).toHaveScreenshot(
+      "Sign In, Invalid Username and Password, Username or Password is Invalid.png"
+    );
   });
 
-  test.fixme("should error for an invalid password for existing user", async ({ page }) => {
+  test("should error for an invalid password for existing user", async ({ page, authStep }) => {
     // cy.database("find", "users").then((user: User) => {
     //   cy.login(user.username, "INVALID");
     // });
+    const user = await findData({ entity: "users" });
+    console.log("user", user);
+
+    await page.goto("/");
+    await authStep.login(user.username, "INVALID");
+
     // cy.getBySel("signin-error")
     //   .should("be.visible")
     //   .and("have.text", "Username or password is invalid");
+    await expect(page.getByText("Username or password is invalid")).toBeVisible();
+
     // cy.visualSnapshot("Sign In, Invalid Username, Username or Password is Invalid");
+    await expect(page).toHaveScreenshot(
+      "Sign In, Invalid Username, Username or Password is Invalid.png"
+    );
   });
 });
