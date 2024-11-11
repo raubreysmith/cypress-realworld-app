@@ -2,8 +2,6 @@
 // import { isMobile } from "../../support/utils";
 import { expect, selectors } from "@playwright/test";
 import { test } from "../fixtures/base.fixture";
-import child_process from "node:child_process";
-import util from "util";
 import { findData, seedDatabase } from "../services/testdata/testdata.service";
 
 // const apiGraphQL = `${Cypress.env("apiUrl")}/graphql`;
